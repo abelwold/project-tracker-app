@@ -2,16 +2,12 @@ import React, { useState } from "react";
 import { db } from "../../../firebase/config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-
-
 export default function AddProjectForm({ onProjectAdded }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tag, setTag] = useState("");
   const [reminderDate, setReminderDate] = useState("");
   const [notify, setNotify] = useState(false);
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,9 +37,9 @@ export default function AddProjectForm({ onProjectAdded }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-gray-900 border border-gray-800 p-6 sm:p-8 rounded-xl shadow-md mb-10 space-y-4"
+      className="bg-gray-900 border border-gray-800 p-5 sm:p-6 md:p-8 rounded-xl shadow-md mb-10 space-y-4 w-full max-w-xl mx-auto"
     >
-      <h2 className="text-2xl font-bold text-white mb-2">➕ Add New Project</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold text-white">➕ Add New Project</h2>
 
       <input
         type="text"
@@ -60,7 +56,7 @@ export default function AddProjectForm({ onProjectAdded }) {
         onChange={(e) => setDescription(e.target.value)}
         className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"
         rows={3}
-      ></textarea>
+      />
 
       <input
         type="text"
@@ -70,30 +66,32 @@ export default function AddProjectForm({ onProjectAdded }) {
         className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
       />
 
-      <div className="space-y-2 pt-2">
-        <label className="block text-sm text-white">Reminder Date (optional)</label>
-        <input
-          type="date"
-          value={reminderDate}
-          onChange={(e) => setReminderDate(e.target.value)}
-          className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-2">
+        <div className="flex-1">
+          <label className="block text-sm text-white mb-1">Reminder Date (optional)</label>
+          <input
+            type="date"
+            value={reminderDate}
+            onChange={(e) => setReminderDate(e.target.value)}
+            className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+        </div>
 
-        <label className="inline-flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2 pt-2 sm:pt-7">
           <input
             type="checkbox"
             checked={notify}
             onChange={() => setNotify(!notify)}
             className="form-checkbox h-5 w-5 text-indigo-600"
           />
-          <span className="text-sm text-white">Enable Reminder Notification</span>
-        </label>
+          <span className="text-sm text-white">Enable Reminder</span>
+        </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-4 text-right">
         <button
           type="submit"
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-md shadow transition duration-200"
+          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-2 rounded-md shadow transition"
         >
           Add Project
         </button>

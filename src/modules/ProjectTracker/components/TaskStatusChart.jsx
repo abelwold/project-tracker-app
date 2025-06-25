@@ -18,7 +18,7 @@ export default function TaskStatusChart({ tasks }) {
   });
 
   const data = {
-    labels: ["Todo", "In Progress", "Done"],
+    labels: ["To Do", "In Progress", "Done"],
     datasets: [
       {
         data: [
@@ -26,7 +26,7 @@ export default function TaskStatusChart({ tasks }) {
           statusCounts["in progress"],
           statusCounts["done"],
         ],
-        backgroundColor: ["#facc15", "#3b82f6", "#10b981"],
+        backgroundColor: ["#facc15", "#3b82f6", "#10b981"], // yellow, blue, green
         borderWidth: 1,
       },
     ],
@@ -39,16 +39,20 @@ export default function TaskStatusChart({ tasks }) {
       legend: {
         position: "bottom",
         labels: {
-          color: "#fff",
+          color: "#ffffff",
+          font: {
+            size: 12,
+            family: "Inter, sans-serif",
+          },
         },
       },
     },
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700">
-      <h3 className="text-lg font-bold text-white mb-4">📊 Task Status Overview</h3>
-      <div className="relative h-64 sm:h-52 w-full">
+    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-md mb-4 w-full">
+      <h3 className="text-lg font-semibold text-white mb-4">📊 Task Status Overview</h3>
+      <div className="relative h-64 sm:h-52 xs:h-44 w-full">
         <Pie data={data} options={options} />
       </div>
     </div>

@@ -1,3 +1,4 @@
+// src/pages/components/TaskList.jsx
 import React, { useEffect, useState } from "react";
 import {
   collection,
@@ -132,11 +133,12 @@ export default function TaskList({ projectId }) {
   }));
 
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       <TaskStatusChart tasks={tasks} />
 
-      <div className="flex flex-wrap justify-between items-center mb-3 gap-2">
-        <div className="flex gap-2">
+      {/* Filters and Export */}
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <div className="flex flex-wrap gap-2">
           {["all", "todo", "in progress", "done"].map((status) => (
             <button
               key={status}
@@ -149,7 +151,6 @@ export default function TaskList({ projectId }) {
             </button>
           ))}
         </div>
-
         {filtered.length > 0 && (
           <CSVLink
             data={csvData}
@@ -157,52 +158,51 @@ export default function TaskList({ projectId }) {
             filename={`tasks-${projectId}.csv`}
             className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500"
           >
-            Export to CSV
+            Export CSV
           </CSVLink>
         )}
       </div>
 
-      {/* New Task Form */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Task Creation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-4">
         <input
           type="text"
-          placeholder="New Task"
+          placeholder="Task"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
-          className="px-3 py-2 rounded bg-gray-700 text-white flex-1"
+          className="px-3 py-2 rounded bg-gray-700 text-white w-full"
         />
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="px-3 py-2 rounded bg-gray-700 text-white"
+          className="px-3 py-2 rounded bg-gray-700 text-white w-full"
         />
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          className="px-3 py-2 rounded bg-gray-700 text-white"
+          className="px-3 py-2 rounded bg-gray-700 text-white w-full"
         >
           <option value="low">🟢 Low</option>
           <option value="medium">🟡 Medium</option>
           <option value="high">🔴 High</option>
         </select>
 
-        <label className="text-white text-sm flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isRecurring}
             onChange={(e) => setIsRecurring(e.target.checked)}
             className="accent-indigo-500"
           />
-          Repeat
-        </label>
-
+          <label className="text-white text-sm">Repeat</label>
+        </div>
         {isRecurring && (
           <>
             <select
               value={recurrenceFrequency}
               onChange={(e) => setRecurrenceFrequency(e.target.value)}
-              className="px-3 py-2 rounded bg-gray-700 text-white"
+              className="px-3 py-2 rounded bg-gray-700 text-white w-full"
             >
               <option value="daily">📅 Daily</option>
               <option value="weekly">📆 Weekly</option>
@@ -212,14 +212,13 @@ export default function TaskList({ projectId }) {
               type="date"
               value={recurrenceEndDate}
               onChange={(e) => setRecurrenceEndDate(e.target.value)}
-              className="px-3 py-2 rounded bg-gray-700 text-white"
+              className="px-3 py-2 rounded bg-gray-700 text-white w-full"
             />
           </>
         )}
-
         <button
           onClick={handleAddTask}
-          className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
+          className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded w-full sm:w-auto"
         >
           Add
         </button>
@@ -227,11 +226,11 @@ export default function TaskList({ projectId }) {
 
       {/* Task List */}
       {filtered.length === 0 ? (
-        <p className="text-sm text-gray-400">No tasks</p>
+        <p className="text-sm text-gray-400">No tasks found.</p>
       ) : (
         <ul className="space-y-2">
           {filtered.map((task) => (
-            <li key={task.id} className="bg-gray-700 p-3 rounded">
+            <li key={task.id} className="bg-gray-700 p-4 rounded">
               {editingTaskId === task.id ? (
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
@@ -262,19 +261,19 @@ export default function TaskList({ projectId }) {
                   </button>
                 </div>
               ) : (
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start flex-wrap gap-2">
                   <div>
                     <p className="text-white font-medium">{task.title}</p>
-                    <div className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400">
                       Due:{" "}
                       {task.dueDate?.seconds
                         ? new Date(task.dueDate.seconds * 1000).toLocaleDateString()
                         : "N/A"}
-                    </div>
-                    <div className="text-xs mt-1">
+                    </p>
+                    <p className="text-xs mt-1">
                       Priority:{" "}
                       <span className="font-semibold capitalize">{task.priority}</span>
-                    </div>
+                    </p>
                   </div>
                   <button
                     onClick={() => handleEditTask(task)}

@@ -33,8 +33,8 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 
     try {
       await updateDoc(doc(db, "trackerProjects", project.id), updates);
-      onSave();
-      onClose();
+      onSave?.();
+      onClose?.();
     } catch (error) {
       console.error("Failed to update project:", error);
     }
@@ -44,8 +44,8 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md shadow-xl border border-gray-700">
-        <h2 className="text-xl font-bold text-white mb-4">✏️ Edit Project</h2>
+      <div className="bg-gray-900 rounded-lg p-5 sm:p-6 w-full max-w-lg shadow-xl border border-gray-700 space-y-5">
+        <h2 className="text-xl font-bold text-white">✏️ Edit Project</h2>
 
         <div className="space-y-4">
           <div>
@@ -54,7 +54,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter project name"
             />
           </div>
@@ -65,7 +65,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               placeholder="Describe this project"
             ></textarea>
           </div>
@@ -76,7 +76,7 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
               type="text"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="e.g. urgent, personal"
             />
           </div>
@@ -87,27 +87,26 @@ export default function EditProjectModal({ isOpen, onClose, project, onSave }) {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-6">
+        <div className="flex justify-between items-center pt-4">
           <button
             onClick={onClose}
-            className="text-sm text-gray-400 hover:text-white"
+            className="text-sm text-gray-400 hover:text-white transition"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2 rounded shadow transition"
           >
             Save Changes
           </button>
         </div>
       </div>
-      
     </div>
   );
 }

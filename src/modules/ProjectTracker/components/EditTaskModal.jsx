@@ -1,4 +1,3 @@
-// src/pages/components/EditTaskModal.jsx
 import React, { useEffect, useState } from "react";
 import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "../../../firebase/config";
@@ -40,16 +39,16 @@ export default function EditTaskModal({ task, onClose }) {
 
     try {
       await updateDoc(doc(db, "trackerTasks", task.id), updates);
-      onClose();
+      onClose?.();
     } catch (err) {
       console.error("Error updating task:", err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4 sm:px-0">
-      <div className="bg-gray-900 p-6 sm:p-8 rounded-lg w-full max-w-md shadow-lg border border-indigo-600 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-white mb-5 text-center">Edit Task</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+      <div className="bg-gray-900 w-full max-w-md rounded-lg shadow-lg border border-indigo-600 p-6 space-y-5 overflow-y-auto max-h-[90vh]">
+        <h2 className="text-xl font-bold text-white text-center">📝 Edit Task</h2>
 
         <div className="space-y-4">
           <div>
@@ -59,7 +58,7 @@ export default function EditTaskModal({ task, onClose }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Task Title"
-              className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -69,7 +68,7 @@ export default function EditTaskModal({ task, onClose }) {
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -78,7 +77,7 @@ export default function EditTaskModal({ task, onClose }) {
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
-              className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+              className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
             >
               <option value="low">🟢 Low</option>
               <option value="medium">🟡 Medium</option>
@@ -93,17 +92,17 @@ export default function EditTaskModal({ task, onClose }) {
               onChange={(e) => setIsRecurring(e.target.checked)}
               className="accent-indigo-500"
             />
-            <label className="text-sm text-white">Repeat</label>
+            <label className="text-sm text-white">Repeat Task</label>
           </div>
 
           {isRecurring && (
             <>
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Frequency</label>
+                <label className="block text-sm text-gray-300 mb-1">Recurrence Frequency</label>
                 <select
                   value={recurrenceFrequency}
                   onChange={(e) => setRecurrenceFrequency(e.target.value)}
-                  className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+                  className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
                 >
                   <option value="daily">📅 Daily</option>
                   <option value="weekly">📆 Weekly</option>
@@ -117,23 +116,23 @@ export default function EditTaskModal({ task, onClose }) {
                   type="date"
                   value={recurrenceEndDate}
                   onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+                  className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700"
                 />
               </div>
             </>
           )}
         </div>
 
-        <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3">
+        <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-500 w-full sm:w-auto"
+            className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded transition w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-500 w-full sm:w-auto"
+            className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded transition w-full sm:w-auto"
           >
             Save Changes
           </button>
