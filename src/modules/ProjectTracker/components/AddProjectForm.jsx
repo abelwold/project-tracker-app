@@ -5,7 +5,8 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 export default function AddProjectForm({ onProjectAdded }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tag, setTag] = useState("");
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState("");
   const [reminderDate, setReminderDate] = useState("");
   const [notify, setNotify] = useState(false);
 
@@ -17,15 +18,17 @@ export default function AddProjectForm({ onProjectAdded }) {
       await addDoc(collection(db, "trackerProjects"), {
         title,
         description,
-        tag,
+        tags,
         reminderDate,
         notify,
         createdAt: serverTimestamp(),
       });
 
+      // Reset all fields
       setTitle("");
       setDescription("");
-      setTag("");
+      setTags([]); // ✅ correct reset
+      setTagInput("");
       setReminderDate("");
       setNotify(false);
       onProjectAdded?.();
@@ -58,14 +61,46 @@ export default function AddProjectForm({ onProjectAdded }) {
         rows={3}
       />
 
-      <input
-        type="text"
-        placeholder="Tag (e.g. client, personal, urgent)"
-        value={tag}
-        onChange={(e) => setTag(e.target.value)}
-        className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-      />
+      {/* Tags Input */}
+      <div>
+        <label className="text-white text-sm block mb-1">Tags (optional)</label>
+        <div className="flex gap-2 flex-wrap mb-2">
+          {Array.isArray(tags) &&
+            tags.map((t, index) => (
+              <span
+                key={index}
+                className="bg-indigo-700 text-white px-2 py-1 rounded text-xs flex items-center gap-1"
+              >
+                {t}
+                <button
+                  type="button"
+                  onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                  className="text-xs hover:text-red-400"
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Enter tag and press Enter"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && tagInput.trim()) {
+              e.preventDefault();
+              if (!tags.includes(tagInput.trim())) {
+                setTags([...tags, tagInput.trim()]);
+              }
+              setTagInput("");
+            }
+          }}
+          className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+        />
+      </div>
 
+      {/* Reminder Settings */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-2">
         <div className="flex-1">
           <label className="block text-sm text-white mb-1">Reminder Date (optional)</label>
@@ -88,6 +123,7 @@ export default function AddProjectForm({ onProjectAdded }) {
         </div>
       </div>
 
+      {/* Submit Button */}
       <div className="pt-4 text-right">
         <button
           type="submit"

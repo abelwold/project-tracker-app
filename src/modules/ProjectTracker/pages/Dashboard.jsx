@@ -95,7 +95,7 @@ export default function ProjectTrackerDashboard() {
 
         return {
           ...project,
-          tag: project.tag?.toLowerCase() || null,
+          tags: project.tags?.map((t) => t.toLowerCase()) || [],
           totalTasks: tasks.length,
           todoTasks: tasks.filter((t) => t.status === "todo").length,
           inProgressTasks: tasks.filter((t) => t.status === "in progress").length,
@@ -107,7 +107,13 @@ export default function ProjectTrackerDashboard() {
 
     setProjects(data.filter((p) => !p.deleted));
     setTrashedProjects(data.filter((p) => p.deleted));
-    setAvailableTags(["all", ...new Set(data.map((p) => p.tag).filter(Boolean))]);
+    setAvailableTags([
+  "all",
+  ...new Set(
+    data.flatMap((p) => (Array.isArray(p.tags) ? p.tags.map((t) => t.toLowerCase()) : []))
+  ),
+]);
+
   };
 
   useEffect(() => {
@@ -118,7 +124,10 @@ export default function ProjectTrackerDashboard() {
 
   const filteredProjects = filterTag === "all"
     ? projects
-    : projects.filter((p) => p.tag === filterTag.toLowerCase());
+    : projects.filter((p) =>
+  Array.isArray(p.tags) && p.tags.includes(filterTag.toLowerCase())
+)
+
 
   const toggleExpand = (id) =>
     setExpandedProject((prev) => (prev === id ? null : id));
@@ -140,7 +149,7 @@ export default function ProjectTrackerDashboard() {
         onSave={fetchProjects}
       />
 
-      <div className="sticky top-4 z-50 mb-4">
+      <div className="top-4 z-50 mb-4">
         <button
           onClick={() => navigate("/")}
           className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 text-white text-sm shadow"
@@ -224,9 +233,17 @@ export default function ProjectTrackerDashboard() {
                 </div>
               </div>
               <div className="flex flex-wrap sm:flex-col items-start gap-2">
-                <span className={`text-xs px-2 py-1 rounded-full text-white ${getColorForTag(proj.tag)}`}>
-                  {proj.tag}
-                </span>
+                <div className="flex gap-1 flex-wrap mt-1">
+  {proj.tags?.map((tag, idx) => (
+    <span
+      key={idx}
+      className={`text-xs px-2 py-1 rounded-full text-white ${getColorForTag(tag)}`}
+    >
+      {tag}
+    </span>
+  ))}
+</div>
+
                 {!showTrash ? (
                   <>
                     <button onClick={() => handleTrashProject(proj.id)} className="text-xs text-red-400 hover:underline">Trash</button>

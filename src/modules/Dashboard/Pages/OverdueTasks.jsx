@@ -2,30 +2,31 @@ import React, { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../../firebase/config";
 import { useNavigate } from "react-router-dom";
+import { onSnapshot } from "firebase/firestore";
 
 export default function OverdueTasks() {
   const [tasks, setTasks] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const snap = await getDocs(collection(db, "trackerTasks"));
-      const today = new Date();
+useEffect(() => {
+  const unsubscribe = onSnapshot(collection(db, "trackerTasks"), (snap) => {
+    const today = new Date();
 
-      const overdue = snap.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter(
-          (task) =>
-            task.status !== "done" &&
-            task.dueDate &&
-            new Date(task.dueDate.seconds * 1000) < today
-        );
+    const overdue = snap.docs
+  .map((doc) => ({ id: doc.id, ...doc.data() }))
+  .filter(
+    (task) =>
+      task.status !== "done" &&
+      !task.trashed && // ✅ exclude trashed tasks
+      task.dueDate &&
+      new Date(task.dueDate.seconds * 1000) < today
+  );
 
-      setTasks(overdue);
-    };
+    setTasks(overdue);
+  });
 
-    fetchTasks();
-  }, []);
+  return () => unsubscribe(); // cleanup on unmount
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white px-4 py-8 max-w-4xl mx-auto">

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { db } from "../../../firebase/config";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import { toast } from "react-toastify";
 
 export default function TaskReminders() {
   const [reminders, setReminders] = useState({ today: [], tomorrow: [] });
+  const hasShownToast = useRef(false); // 🛡️ guard to stop repeated toasts
 
   useEffect(() => {
     const q = query(collection(db, "trackerTasks"));
@@ -35,8 +36,12 @@ export default function TaskReminders() {
         else if (isSameDay(dueDate, tomorrow)) dueTomorrow.push(task);
       });
 
-      if (dueToday.length > 0) toast.warn(`🕒 ${dueToday.length} task(s) due today!`);
-      if (dueTomorrow.length > 0) toast.info(`📅 ${dueTomorrow.length} task(s) due tomorrow.`);
+      // ✅ Show toast only once per session
+      if (!hasShownToast.current) {
+        if (dueToday.length > 0) toast.warn(`🕒 ${dueToday.length} task(s) due today!`);
+        if (dueTomorrow.length > 0) toast.info(`📅 ${dueTomorrow.length} task(s) due tomorrow.`);
+        hasShownToast.current = true;
+      }
 
       setReminders({ today: dueToday, tomorrow: dueTomorrow });
     });

@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -8,6 +9,7 @@ import MainDashboard from "./modules/Dashboard/Pages/MainDashboard";
 import OverdueTasks from  "./modules/Dashboard/Pages/OverdueTasks";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ViewProjectTasks from './modules/ProjectTracker/components/ViewProjectTasks';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -20,6 +22,7 @@ function App() {
          <Route path="/project-tracker" element={<ProjectTrackerDashboard />} />
          <Route path="/" element={<MainDashboard />} />
          <Route path="/overdue" element={<OverdueTasks />} />
+         <Route path="/project/:projectId/tasks" element={<ViewProjectTasks />} />
 
       </Routes>
     </Router>

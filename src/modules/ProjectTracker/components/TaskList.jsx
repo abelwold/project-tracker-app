@@ -1,5 +1,5 @@
 // src/pages/components/TaskList.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef  } from "react";
 import {
   collection,
   addDoc,
@@ -15,6 +15,7 @@ import { db } from "../../../firebase/config";
 import TaskStatusChart from "./TaskStatusChart";
 import { toast } from "react-toastify";
 import { CSVLink } from "react-csv";
+import CSVImport from "./CSVImport";
 
 export default function TaskList({ projectId }) {
   const [tasks, setTasks] = useState([]);
@@ -29,26 +30,34 @@ export default function TaskList({ projectId }) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceFrequency, setRecurrenceFrequency] = useState("daily");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+  const warnedTasks = useRef(new Set());
 
-  useEffect(() => {
-    const q = query(collection(db, "trackerTasks"), where("projectId", "==", projectId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const taskData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setTasks(taskData);
+ useEffect(() => {
+  const q = query(collection(db, "trackerTasks"), where("projectId", "==", projectId));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const taskData = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setTasks(taskData);
 
-      taskData.forEach((task) => {
-        const due = task.dueDate?.seconds ? new Date(task.dueDate.seconds * 1000) : null;
-        if (due && task.status !== "done" && due < new Date()) {
-          toast.warn(`⚠️ Task "${task.title}" is overdue!`);
-        }
-      });
+    taskData.forEach((task) => {
+      const due = task.dueDate?.seconds ? new Date(task.dueDate.seconds * 1000) : null;
+      if (
+        due &&
+        task.status !== "done" &&
+        due < new Date() &&
+        !warnedTasks.current.has(task.id)
+      ) {
+        toast.warn(`⚠️ Task "${task.title}" is overdue!`);
+        warnedTasks.current.add(task.id);
+      }
     });
+  });
 
-    return () => unsubscribe();
-  }, [projectId]);
+  return () => unsubscribe();
+}, [projectId]);
+
 
   const handleAddTask = async () => {
     if (!newTask.trim()) return;
@@ -115,6 +124,12 @@ export default function TaskList({ projectId }) {
     setEditingDueDate("");
     setEditingPriority("medium");
   };
+  const handleCancelEdit = () => {
+  setEditingTaskId(null);
+  setEditingTitle("");
+  setEditingDueDate("");
+  setEditingPriority("medium");
+};
 
   const filtered = statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter);
 
@@ -136,7 +151,6 @@ export default function TaskList({ projectId }) {
     <div className="mb-6">
       <TaskStatusChart tasks={tasks} />
 
-      {/* Filters and Export */}
       <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <div className="flex flex-wrap gap-2">
           {["all", "todo", "in progress", "done"].map((status) => (
@@ -151,16 +165,24 @@ export default function TaskList({ projectId }) {
             </button>
           ))}
         </div>
-        {filtered.length > 0 && (
-          <CSVLink
-            data={csvData}
-            headers={headers}
-            filename={`tasks-${projectId}.csv`}
-            className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500"
-          >
-            Export CSV
-          </CSVLink>
-        )}
+      {filtered.length > 0 && (
+  <div className="flex flex-col sm:flex-row items-center gap-2">
+    <CSVLink
+      data={csvData}
+      headers={headers}
+      filename={`tasks-${projectId}.csv`}
+      className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500"
+    >
+      Export CSV
+    </CSVLink>
+
+    <div className="text-sm">
+      <CSVImport projectId={projectId} />
+    </div>
+  </div>
+)}
+
+        
       </div>
 
       {/* Task Creation */}
@@ -253,6 +275,12 @@ export default function TaskList({ projectId }) {
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
+                    <button
+    onClick={handleCancelEdit}
+    className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600"
+  >
+    Cancel
+  </button>
                   <button
                     onClick={handleSaveEdit}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
@@ -271,8 +299,25 @@ export default function TaskList({ projectId }) {
                         : "N/A"}
                     </p>
                     <p className="text-xs mt-1">
-                      Priority:{" "}
-                      <span className="font-semibold capitalize">{task.priority}</span>
+                      Priority: <span className="font-semibold capitalize">{task.priority}</span>
+                    </p>
+                    <p className="text-xs mt-1">
+                      Status:{" "}
+                      <select
+                        value={task.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          await updateDoc(doc(db, "trackerTasks", task.id), {
+                            status: newStatus,
+                          });
+                          toast.success(`Task marked as ${newStatus}`);
+                        }}
+                        className="bg-gray-600 text-white text-xs px-2 py-1 rounded mt-1"
+                      >
+                        <option value="todo">To Do</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="done">Done</option>
+                      </select>
                     </p>
                   </div>
                   <button
