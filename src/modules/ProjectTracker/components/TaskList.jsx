@@ -1,5 +1,5 @@
 // src/pages/components/TaskList.jsx
-import React, { useEffect, useState, useRef  } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -20,6 +20,7 @@ import CSVImport from "./CSVImport";
 export default function TaskList({ projectId }) {
   const [tasks, setTasks] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [newTask, setNewTask] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("medium");
@@ -32,32 +33,37 @@ export default function TaskList({ projectId }) {
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const warnedTasks = useRef(new Set());
 
- useEffect(() => {
-  const q = query(collection(db, "trackerTasks"), where("projectId", "==", projectId));
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const taskData = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setTasks(taskData);
+  useEffect(() => {
+    const q = query(collection(db, "trackerTasks"), where("projectId", "==", projectId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const taskData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks(taskData);
 
-    taskData.forEach((task) => {
-      const due = task.dueDate?.seconds ? new Date(task.dueDate.seconds * 1000) : null;
-      if (
-        due &&
-        task.status !== "done" &&
-        due < new Date() &&
-        !warnedTasks.current.has(task.id)
-      ) {
-        toast.warn(`⚠️ Task "${task.title}" is overdue!`);
-        warnedTasks.current.add(task.id);
-      }
+      taskData.forEach((task) => {
+        const due = task.dueDate?.seconds ? new Date(task.dueDate.seconds * 1000) : null;
+        if (
+          due &&
+          task.status !== "done" &&
+          due < new Date() &&
+          !warnedTasks.current.has(task.id)
+        ) {
+          toast.warn(`⚠️ Task "${task.title}" is overdue!`);
+          warnedTasks.current.add(task.id);
+        }
+      });
     });
+
+    return () => unsubscribe();
+  }, [projectId]);
+
+  const filtered = tasks.filter((t) => {
+    const matchesStatus = statusFilter === "all" || t.status === statusFilter;
+    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
   });
-
-  return () => unsubscribe();
-}, [projectId]);
-
 
   const handleAddTask = async () => {
     if (!newTask.trim()) return;
@@ -82,14 +88,12 @@ export default function TaskList({ projectId }) {
     if (isRecurring && endDate && baseDate <= endDate) {
       const dates = [];
       let current = new Date(baseDate);
-
       while (current <= endDate) {
         dates.push(new Date(current));
         if (recurrenceFrequency === "daily") current.setDate(current.getDate() + 1);
         else if (recurrenceFrequency === "weekly") current.setDate(current.getDate() + 7);
         else if (recurrenceFrequency === "monthly") current.setMonth(current.getMonth() + 1);
       }
-
       await Promise.all(dates.map((date) => createTask(date)));
     } else {
       await createTask(baseDate);
@@ -124,14 +128,13 @@ export default function TaskList({ projectId }) {
     setEditingDueDate("");
     setEditingPriority("medium");
   };
-  const handleCancelEdit = () => {
-  setEditingTaskId(null);
-  setEditingTitle("");
-  setEditingDueDate("");
-  setEditingPriority("medium");
-};
 
-  const filtered = statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter);
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditingTitle("");
+    setEditingDueDate("");
+    setEditingPriority("medium");
+  };
 
   const headers = [
     { label: "Title", key: "title" },
@@ -151,6 +154,7 @@ export default function TaskList({ projectId }) {
     <div className="mb-6">
       <TaskStatusChart tasks={tasks} />
 
+      {/* Filter + Search */}
       <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <div className="flex flex-wrap gap-2">
           {["all", "todo", "in progress", "done"].map((status) => (
@@ -165,27 +169,33 @@ export default function TaskList({ projectId }) {
             </button>
           ))}
         </div>
-      {filtered.length > 0 && (
-  <div className="flex flex-col sm:flex-row items-center gap-2">
+        <input
+          type="text"
+          placeholder="🔍 Search task"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="px-3 py-1 rounded bg-gray-700 text-white text-sm w-full sm:w-64"
+        />
+     {filtered.length > 0 && (
+  <div className="flex flex-wrap items-center gap-2 text-sm">
     <CSVLink
       data={csvData}
       headers={headers}
       filename={`tasks-${projectId}.csv`}
-      className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500"
+      className="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded"
     >
       Export CSV
     </CSVLink>
 
-    <div className="text-sm">
+    <div className="w-full sm:w-auto">
       <CSVImport projectId={projectId} />
     </div>
   </div>
 )}
 
-        
       </div>
 
-      {/* Task Creation */}
+      {/* Add Task */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-4">
         <input
           type="text"
@@ -246,7 +256,7 @@ export default function TaskList({ projectId }) {
         </button>
       </div>
 
-      {/* Task List */}
+      {/* Render Tasks */}
       {filtered.length === 0 ? (
         <p className="text-sm text-gray-400">No tasks found.</p>
       ) : (
@@ -275,12 +285,12 @@ export default function TaskList({ projectId }) {
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
-                    <button
-    onClick={handleCancelEdit}
-    className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600"
-  >
-    Cancel
-  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
                   <button
                     onClick={handleSaveEdit}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
